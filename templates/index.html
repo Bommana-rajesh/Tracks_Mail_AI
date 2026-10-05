@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TraceMail AI | Email Forensics</title>
+
+    <!-- Leaflet -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <!-- TraceMail CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<!-- =====================================================
+     TOP HEADER
+===================================================== -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="terminal-title">
+            &gt; SYSTEM ARCHITECTURE :: EMAIL FORENSIC PIPELINE
+        </div>
+
+        <h1>
+            TraceMail AI
+        </h1>
+
+        <p>
+            Forensic Investigation &amp; Threat Intelligence Platform
+        </p>
+
+    </div>
+
+    <div class="status">
+        ● ANALYSIS ENGINE ONLINE
+    </div>
+
+</header>
+
+
+<main class="container">
+
+
+<!-- =====================================================
+     UPLOAD
+===================================================== -->
+
+<section class="upload-box">
+
+    <div class="section-title">
+        [01] EMAIL EVIDENCE INGESTION
+    </div>
+
+    <form
+        class="upload-form"
+        action="/"
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        <input
+            type="file"
+            name="email_file"
+            accept=".eml"
+            required
+        >
+
+        <button
+            type="submit"
+            class="analyze-btn"
+        >
+            ANALYZE .EML
+        </button>
+
+    </form>
+
+</section>
+
+
+<!-- =====================================================
+     ERROR
+===================================================== -->
+
+{% if result and result.error %}
+
+<div class="error-box">
+
+    <strong>ANALYSIS ERROR</strong>
+
+    <br><br>
+
+    {{ result.error }}
+
+</div>
+
+{% endif %}
+
+
+{% if result and not result.error %}
+
+
+<!-- =====================================================
+     SYSTEM ARCHITECTURE
+===================================================== -->
+
+<section class="architecture">
+
+
+    <div class="module">
+
+        <h3>
+            1. INGESTION HUB
+        </h3>
+
+        <ul>
+
+            <li>.EML File Parser</li>
+
+            <li>MIME Extraction</li>
+
+            <li>Header Extraction</li>
+
+            <li>Body Analysis</li>
+
+            <li>Attachment Metadata</li>
+
+        </ul>
+
+    </div>
+
+
+    <div class="module purple">
+
+        <h3>
+            2. THREAT INTELLIGENCE ENGINE
+        </h3>
+
+        <ul>
+
+            <li>SPF / DKIM / DMARC</li>
+
+            <li>URL Intelligence</li>
+
+            <li>Domain Indicators</li>
+
+            <li>Content Signals</li>
+
+            <li>Identity Correlation</li>
+
+            <li>Threat Scoring</li>
+
+        </ul>
+
+    </div>
+
+
+    <div class="module green">
+
+        <h3>
+            3. FORENSICS &amp; ATTRIBUTION
+        </h3>
+
+        <ul>
+
+            <li>IP Extraction</li>
+
+            <li>Routing Analysis</li>
+
+            <li>ISP / ASN</li>
+
+            <li>Infrastructure Detection</li>
+
+            <li>Geolocation</li>
+
+            <li>Evidence Correlation</li>
+
+        </ul>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     FINAL VERDICT
+===================================================== -->
+
+<section class="verdict">
+
+    <div class="verdict-header">
+
+        <div>
+
+            <div class="verdict-title">
+                &gt; FINAL THREAT ASSESSMENT
+            </div>
+
+            <div class="score">
+                {{ result.score|default(0) }}/100
+            </div>
+
+            {% set sev = result.severity|default('UNKNOWN')|lower %}
+
+            <div class="severity severity-{{ sev }}">
+
+                {{ result.severity|default('UNKNOWN')|upper }}
+
+            </div>
+
+        </div>
+
+
+        <div class="analysis-status">
+
+            <div class="analysis-status-label">
+                ANALYSIS STATUS
+            </div>
+
+            <div class="analysis-status-value">
+                COMPLETE
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         STATS
+    ================================================= -->
+
+    <div class="stats">
+
+
+        <div class="stat">
+
+            <div class="stat-label">
+                SPF
+            </div>
+
+            <div
+                class="stat-value
+                {% if result.spf|default('')|lower == 'pass' %}
+                    pass
+                {% elif result.spf|default('')|lower == 'fail' %}
+                    fail
+                {% else %}
+                    unknown
+                {% endif %}"
+            >
+
+                {{ result.spf|default('UNKNOWN')|upper }}
+
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-label">
+                DKIM
+            </div>
+
+            <div
+                class="stat-value
+                {% if result.dkim|default('')|lower == 'pass' %}
+                    pass
+                {% elif result.dkim|default('')|lower == 'fail' %}
+                    fail
+                {% else %}
+                    unknown
+                {% endif %}"
+            >
+
+                {{ result.dkim|default('UNKNOWN')|upper }}
+
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-label">
+                DMARC
+            </div>
+
+            <div
+                class="stat-value
+                {% if result.dmarc|default('')|lower == 'pass' %}
+                    pass
+                {% elif result.dmarc|default('')|lower == 'fail' %}
+                    fail
+                {% else %}
+                    unknown
+                {% endif %}"
+            >
+
+                {{ result.dmarc|default('UNKNOWN')|upper }}
+
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-label">
+                URLs
+            </div>
+
+            <div class="stat-value">
+
+                {{ result.urls|default([])|length }}
+
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="stat-label">
+                IPs
+            </div>
+
+            <div class="stat-value">
+
+                {{ result.ips|default([])|length }}
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+<!-- =====================================================
+     AI THREAT INTELLIGENCE
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        🤖 AI THREAT INTELLIGENCE
+    </div>
+
+    <div class="panel-body">
+
+        <!-- AI CLASSIFICATION -->
+
+        <div class="ai-classification">
+
+            <div class="ai-main-result">
+
+                <div class="ai-label">
+                    AI CLASSIFICATION
+                </div>
+
+                <div class="ai-category">
+                    {{ result.ai_category|default('UNKNOWN') }}
+                </div>
+
+            </div>
+
+
+            <div class="ai-confidence">
+
+                <div class="ai-label">
+                    AI CONFIDENCE
+                </div>
+
+                <div class="ai-confidence-value">
+                    {{ result.ai_confidence|default(0) }}%
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- AI EXPLANATION -->
+
+        <div class="ai-explanation">
+
+            <div class="ai-label">
+                AI EXPLANATION
+            </div>
+
+            <div class="ai-explanation-text">
+
+                {{ result.ai_explanation|default(
+                    'No AI explanation available.'
+                ) }}
+
+            </div>
+
+        </div>
+
+
+        <!-- AI INDICATORS -->
+
+        <div class="ai-indicators">
+
+            <div class="ai-label">
+                AI DETECTED INDICATORS
+            </div>
+
+
+            {% if result.ai_indicators %}
+
+                {% for indicator in result.ai_indicators %}
+
+                <div class="ai-indicator">
+
+                    <div class="ai-indicator-title">
+
+                        {{ indicator.type|default(
+                            'THREAT SIGNAL'
+                        ) }}
+
+                    </div>
+
+
+                    <div class="ai-indicator-description">
+
+                        {{ indicator.description|default(
+                            'No description available.'
+                        ) }}
+
+                    </div>
+
+
+                    {% if indicator.matches %}
+
+                    <div class="ai-matches">
+
+                        Matches:
+
+                        {% for match in indicator.matches %}
+
+                            <span class="ai-match">
+                                {{ match }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if indicator.urls %}
+
+                    <div class="ai-matches">
+
+                        Suspicious URLs:
+
+                        {% for url in indicator.urls %}
+
+                            <span class="ai-match">
+                                {{ url }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="ai-indicator">
+
+                    No AI indicators detected.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- AI CLASS SCORES -->
+
+        <div class="ai-scores">
+
+            <div class="ai-label">
+                AI CLASSIFICATION SCORES
+            </div>
+
+
+            {% if result.ai_normalized_scores %}
+
+                {% for category, score in result.ai_normalized_scores.items() %}
+
+                <div class="ai-score-row">
+
+                    <div class="ai-score-name">
+                        {{ category }}
+                    </div>
+
+                    <div class="ai-score-bar">
+
+                        <div
+                            class="ai-score-fill"
+                            style="width: {{ score }}%;"
+                        ></div>
+
+                    </div>
+
+                    <div class="ai-score-value">
+                        {{ score }}%
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-cell">
+                    No AI classification scores available.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     EMAIL IDENTITY
+===================================================== -->
+
+<section class="two-column">
+
+
+    <div class="panel">
+
+        <div class="panel-header">
+            EMAIL IDENTITY
+        </div>
+
+        <div class="panel-body">
+
+            <table>
+
+                <tr>
+                    <th>FROM</th>
+                    <td>
+                        {{ result.sender|default('Not available') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>REPLY-TO</th>
+                    <td>
+                        {{ result.reply_to|default('Not available') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>RETURN-PATH</th>
+                    <td>
+                        {{ result.return_path|default('Not available') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>SUBJECT</th>
+                    <td>
+                        {{ result.subject|default('Not available') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>DATE</th>
+                    <td>
+                        {{ result.date|default('Not available') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>MESSAGE-ID</th>
+                    <td>
+                        <code>
+                            {{ result.message_id|default('Not available') }}
+                        </code>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         AUTHENTICATION
+    ================================================= -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+            AUTHENTICATION RESULTS
+        </div>
+
+        <div class="panel-body">
+
+            <div class="auth-grid">
+
+
+                <div class="auth-card">
+
+                    <div class="auth-name">
+                        SPF
+                    </div>
+
+                    <div class="auth-value">
+
+                        {{ result.spf|default('UNKNOWN')|upper }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="auth-card">
+
+                    <div class="auth-name">
+                        DKIM
+                    </div>
+
+                    <div class="auth-value">
+
+                        {{ result.dkim|default('UNKNOWN')|upper }}
+
+                    </div>
+
+                </div>
+
+
+                <div class="auth-card">
+
+                    <div class="auth-name">
+                        DMARC
+                    </div>
+
+                    <div class="auth-value">
+
+                        {{ result.dmarc|default('UNKNOWN')|upper }}
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     DETECTION SIGNALS
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        DETECTION SIGNALS / THREAT SCORING EVIDENCE
+    </div>
+
+    <div class="panel-body">
+
+        <div class="evidence-list">
+
+            {% if result.reasons %}
+
+                {% for reason in result.reasons %}
+
+                <div class="evidence medium">
+
+                    <div class="evidence-title">
+                        SIGNAL {{ loop.index }}
+                    </div>
+
+                    <div class="evidence-text">
+                        {{ reason }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="evidence low">
+
+                    <div class="evidence-title">
+                        NO ADDITIONAL DETECTION SIGNALS
+                    </div>
+
+                    <div class="evidence-text">
+                        The current analysis did not generate additional
+                        threat-scoring evidence.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CORRELATED FORENSIC EVIDENCE
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        🔗 CORRELATED FORENSIC EVIDENCE
+    </div>
+
+    <div class="panel-body">
+
+        <!-- OVERALL CORRELATION CONFIDENCE -->
+
+        <div class="correlation-summary">
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    CORRELATION CONFIDENCE
+                </div>
+
+                <div class="stat-value">
+                    {{ result.overall_confidence|default(0) }}%
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-label">
+                    CORRELATED SIGNALS
+                </div>
+
+                <div class="stat-value">
+                    {{ result.correlations|default([])|length }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CORRELATION RESULTS -->
+
+        <div class="evidence-list">
+
+            {% if result.correlations %}
+
+                {% for correlation in result.correlations %}
+
+                <div class="evidence medium">
+
+                    <div class="evidence-title">
+
+                        {% if correlation.type %}
+                            {{ correlation.type }}
+                        {% elif correlation.name %}
+                            {{ correlation.name }}
+                        {% elif correlation.rule %}
+                            {{ correlation.rule }}
+                        {% else %}
+                            CORRELATION {{ loop.index }}
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="evidence-text">
+
+                        {% if correlation.description %}
+
+                            {{ correlation.description }}
+
+                        {% elif correlation.message %}
+
+                            {{ correlation.message }}
+
+                        {% elif correlation.reason %}
+
+                            {{ correlation.reason }}
+
+                        {% elif correlation.text %}
+
+                            {{ correlation.text }}
+
+                        {% else %}
+
+                            Correlated evidence detected between
+                            multiple forensic signals.
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if correlation.severity %}
+
+                    <div class="evidence-text">
+
+                        <strong>
+                            SEVERITY:
+                        </strong>
+
+                        {{ correlation.severity|upper }}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if correlation.reliability %}
+
+                    <div class="evidence-text">
+
+                        <strong>
+                            RELIABILITY:
+                        </strong>
+
+                        {{ correlation.reliability }}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if correlation.confidence is defined %}
+
+                    <div class="evidence-text">
+
+                        <strong>
+                            CONFIDENCE:
+                        </strong>
+
+                        {{ correlation.confidence }}%
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="evidence low">
+
+                    <div class="evidence-title">
+                        NO CROSS-EVIDENCE CORRELATIONS
+                    </div>
+
+                    <div class="evidence-text">
+                        No relationships were identified between the
+                        available authentication, identity, URL,
+                        domain and content evidence.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     RAW EVIDENCE
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        FORENSIC EVIDENCE RECORD
+    </div>
+
+    <div class="panel-body">
+
+        <div class="evidence-list">
+
+            {% if result.evidence %}
+
+                {% for item in result.evidence %}
+
+                <div class="evidence low">
+
+                    <div class="evidence-title">
+
+                        {% if item.signal %}
+                            {{ item.signal }}
+                        {% elif item.type %}
+                            {{ item.type }}
+                        {% elif item.name %}
+                            {{ item.name }}
+                        {% else %}
+                            EVIDENCE {{ loop.index }}
+                        {% endif %}
+
+                    </div>
+
+                    <div class="evidence-text">
+
+                        {% if item.description %}
+
+                            {{ item.description }}
+
+                        {% elif item.message %}
+
+                            {{ item.message }}
+
+                        {% elif item.reason %}
+
+                            {{ item.reason }}
+
+                        {% elif item.text %}
+
+                            {{ item.text }}
+
+                        {% else %}
+
+                            Forensic evidence recorded by
+                            the correlation engine.
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if item.value is defined %}
+
+                    <div class="evidence-text">
+
+                        <strong>
+                            VALUE:
+                        </strong>
+
+                        {{ item.value }}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    {% if item.reliability is defined %}
+
+                    <div class="evidence-text">
+
+                        <strong>
+                            RELIABILITY:
+                        </strong>
+
+                        {{ item.reliability }}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="evidence low">
+
+                    <div class="evidence-title">
+                        NO FORENSIC EVIDENCE RECORDS
+                    </div>
+
+                    <div class="evidence-text">
+                        No individual evidence records were returned
+                        by the correlation engine.
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     INFRASTRUCTURE TABLE
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        INFRASTRUCTURE &amp; IP INTELLIGENCE
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>IP</th>
+
+                    <th>ROLE</th>
+
+                    <th>PROVIDER</th>
+
+                    <th>ISP / ORG</th>
+
+                    <th>ASN</th>
+
+                    <th>COUNTRY</th>
+
+                    <th>REGION</th>
+
+                    <th>CITY</th>
+
+                    <th>LOCATION CONFIDENCE</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+
+                {% if result.ip_locations %}
+
+                    {% for item in result.ip_locations %}
+
+                    <tr>
+
+                        <td>
+                            <code>
+                                {{ item.ip|default('N/A') }}
+                            </code>
+                        </td>
+
+                        <td>
+                            {{ item.role|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.provider|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.org|default(item.isp|default('Unknown')) }}
+                        </td>
+
+                        <td>
+                            {{ item.asn|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.country|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.region|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.city|default('Unknown') }}
+                        </td>
+
+                        <td>
+                            {{ item.location_confidence|default('Unknown') }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="9" class="empty-cell">
+                            No public IP infrastructure data available.
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MAP
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        EMAIL INFRASTRUCTURE &amp; ROUTING MAP
+    </div>
+
+    <div id="threat-map"></div>
+
+    <div class="map-note">
+
+        ⚠ IP geolocation represents approximate network/infrastructure
+        location. It does not identify the attacker's physical address
+        or exact personal location.
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     URL + DOMAIN
+===================================================== -->
+
+<section class="two-column">
+
+
+    <!-- URLS -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+            URL INDICATORS
+        </div>
+
+        <div class="panel-body">
+
+            <div class="indicator-list">
+
+                {% if result.urls %}
+
+                    {% for url in result.urls %}
+
+                    <div class="indicator">
+
+                        <a
+                            href="{{ url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            {{ url }}
+                        </a>
+
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="indicator">
+                        No URLs detected
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- DOMAINS -->
+
+    <div class="panel">
+
+        <div class="panel-header">
+            DOMAIN INDICATORS
+        </div>
+
+        <div class="panel-body">
+
+            <div class="indicator-list">
+
+                {% if result.domains %}
+
+                    {% for domain in result.domains %}
+
+                    <div class="indicator">
+                        {{ domain }}
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="indicator">
+                        No domains detected
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     SENDER / RELAY CANDIDATES
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        SENDER / RELAY CANDIDATES
+    </div>
+
+    <div class="panel-body">
+
+        <div class="indicator-list">
+
+            {% if result.sender_candidates %}
+
+                {% for candidate in result.sender_candidates %}
+
+                <div class="indicator">
+
+                    {% if candidate is mapping %}
+
+                        {% if candidate.ip %}
+                            IP: {{ candidate.ip }}
+                        {% endif %}
+
+                        {% if candidate.role %}
+                            | Role: {{ candidate.role }}
+                        {% endif %}
+
+                        {% if candidate.provider %}
+                            | Provider: {{ candidate.provider }}
+                        {% endif %}
+
+                    {% else %}
+
+                        {{ candidate }}
+
+                    {% endif %}
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="indicator">
+                    No sender / relay candidates identified.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     EMAIL HEADERS
+     IMPORTANT: headers is a LIST
+===================================================== -->
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        EXTRACTED EMAIL HEADERS
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th class="header-col">
+                        HEADER
+                    </th>
+
+                    <th>
+                        VALUE
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+
+                {% if result.headers %}
+
+                    {% for header in result.headers %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ header.name|default('Unknown') }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <code>
+                                {{ header.value|default('') }}
+                            </code>
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="2" class="empty-cell">
+                            No headers extracted.
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     RAW HEADERS
+===================================================== -->
+
+{% if result.raw_headers %}
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        RAW HEADER DATA
+    </div>
+
+    <div class="panel-body">
+
+        <div class="raw-header">
+            {{ result.raw_headers }}
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+<!-- =====================================================
+     BODY PREVIEW
+===================================================== -->
+
+{% if result.body_text %}
+
+<section class="panel section-gap">
+
+    <div class="panel-header">
+        EMAIL BODY FORENSIC PREVIEW
+    </div>
+
+    <div class="panel-body">
+
+        <div class="raw-header">
+            {{ result.body_text }}
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+{% endif %}
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+    TraceMail AI ::
+    Email Threat Detection ::
+    Digital Forensics ::
+    Threat Intelligence
+
+    <br><br>
+
+    Smart India Hackathon 2026 Prototype
+
+</footer>
+
+
+</main>
+
+
+<!-- =====================================================
+     MAP DATA + EXTERNAL JAVASCRIPT
+===================================================== -->
+
+<script type="application/json" id="ip-location-data">
+    {{ result.ip_locations|default([])|tojson }}
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+</html>
